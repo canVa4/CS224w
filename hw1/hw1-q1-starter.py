@@ -25,8 +25,16 @@ def genErdosRenyi(N=5242, E=14484):
     """
     ############################################################################
     # TODO: Your code here!
-    Graph = None
-
+    Graph = snap.PUNGraph.New()
+    for i in range(N):
+        Graph.AddNode(i)
+    cnt = 0
+    while cnt < E:
+        src = np.random.randint(0, N)
+        dst = np.random.randint(0, N)
+        if not Graph.IsEdge(src, dst):
+            Graph.AddEdge(src, dst)
+            cnt += 1
     ############################################################################
     return Graph
 
@@ -41,7 +49,12 @@ def genCircle(N=5242):
     """
     ############################################################################
     # TODO: Your code here!
-    Graph = None
+    Graph = snap.PUNGraph.New()
+    for i in range(N):
+        Graph.AddNode(i)
+    Graph.AddEdge(N - 1, 0)
+    for i in range(N - 1):
+        Graph.AddEdge(i, i + 1)
     ############################################################################
     return Graph
 
@@ -57,7 +70,10 @@ def connectNbrOfNbr(Graph, N=5242):
     """
     ############################################################################
     # TODO: Your code here!
-
+    for i in range(N):
+        n1 = (i + 1 + N) % N
+        n2 = (i - 1 + N) % N
+        Graph.AddEdge(n1, n2)
     ############################################################################
     return Graph
 
@@ -73,7 +89,14 @@ def connectRandomNodes(Graph, M=4000):
     """
     ############################################################################
     # TODO: Your code here!
-
+    N = Graph.GetNodes()
+    cnt = 0
+    while cnt < M:
+        src = np.random.randint(0, N)
+        dst = np.random.randint(0, N)
+        if not Graph.IsEdge(src, dst):
+            Graph.AddEdge(src, dst)
+            cnt += 1
     ############################################################################
     return Graph
 
@@ -103,8 +126,8 @@ def loadCollabNet(path):
     """
     ############################################################################
     # TODO: Your code here!
-    Graph = None
-
+    Graph = snap.LoadEdgeList(snap.PUNGraph, path, 0, 1)
+    snap.DelSelfEdges(Graph)
     ############################################################################
     return Graph
 
@@ -120,7 +143,11 @@ def getDataPointsToPlot(Graph):
     ############################################################################
     # TODO: Your code here!
     X, Y = [], []
-
+    DegToCntV = snap.TIntPrV()
+    snap.GetDegCnt(Graph, DegToCntV)
+    for item in DegToCntV:
+        X.append(item.GetVal1())
+        Y.append(item.GetVal2())
     ############################################################################
     return X, Y
 
@@ -168,7 +195,16 @@ def calcClusteringCoefficientSingleNode(Node, Graph):
     ############################################################################
     # TODO: Your code here!
     C = 0.0
-
+    neigbors = []
+    deg = Node.GetDeg()
+    for i in range(deg):
+        neigbors.append(Graph.GetNI(Node.GetNbrNId(i)))
+    cnt_nbr = 0
+    for i in range(deg):
+        for j in range(i):
+            cnt_nbr += neigbors[i].IsInNId(neigbors[j].GetId())
+    if deg >= 2:
+        C = 2 * cnt_nbr / (deg * (deg - 1.0))
     ############################################################################
     return C
 
@@ -183,6 +219,11 @@ def calcClusteringCoefficient(Graph):
     # TODO: Your code here! If you filled out calcClusteringCoefficientSingleNode,
     #       you'll probably want to call it in a loop here
     C = 0.0
+    V = Graph.GetNodes()
+    for NI in Graph.Nodes():
+        Ci = calcClusteringCoefficientSingleNode(NI, Graph)
+        C = C + Ci
+    C = C / V
 
     ############################################################################
     return C
