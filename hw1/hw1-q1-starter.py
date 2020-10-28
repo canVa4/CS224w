@@ -202,6 +202,7 @@ def calcClusteringCoefficientSingleNode(Node, Graph):
     cnt_nbr = 0
     for i in range(deg):
         for j in range(i):
+            # 因为是无向图，ij与ji只记一次
             cnt_nbr += neigbors[i].IsInNId(neigbors[j].GetId())
     if deg >= 2:
         C = 2 * cnt_nbr / (deg * (deg - 1.0))
